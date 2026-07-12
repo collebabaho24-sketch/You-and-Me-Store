@@ -1,0 +1,104 @@
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
+
+const prisma = new PrismaClient();
+
+async function main() {
+  const passwordHash = await bcrypt.hash("password123", 10);
+
+  const seller = await prisma.user.upsert({
+    where: { email: "seller@example.com" },
+    update: {},
+    create: {
+      name: "Sam Seller",
+      email: "seller@example.com",
+      passwordHash,
+      role: "SELLER",
+    },
+  });
+
+  const buyer = await prisma.user.upsert({
+    where: { email: "buyer@example.com" },
+    update: {},
+    create: {
+      name: "Bailey Buyer",
+      email: "buyer@example.com",
+      passwordHash,
+      role: "BUYER",
+    },
+  });
+
+  const existingListings = await prisma.listing.count({ where: { sellerId: seller.id } });
+
+  if (existingListings === 0) {
+    await prisma.listing.createMany({
+      data: [
+        {
+          title: "Vintage Bicycle",
+          description: "Well-maintained vintage road bike, great for commuting.",
+          price: 150,
+          category: "Vehicles",
+          sellerId: seller.id,
+        },
+        {
+          title: "Handmade Ceramic Mug Set",
+          description: "Set of 4 handmade ceramic mugs, microwave and dishwasher safe.",
+          price: 32,
+          category: "Home & Garden",
+          sellerId: seller.id,
+        },
+        {
+          title: "Web Design Services",
+          description: "I build fast, modern websites for small businesses. Portfolio available.",
+          price: 500,
+          category: "Services",
+          sellerId: seller.id,
+        },
+      ],
+    });
+  }
+
+  const bicycle = await prisma.listing.findFirst({ where: { title: "Vintage Bicycle", sellerId: seller.id } });
+  const mugs = await prisma.listing.findFirst({
+    where: { title: "Handmade Ceramic Mug Set", sellerId: seller.id },
+  });
+
+  if (bicycle) {
+    await prisma.review.upsert({
+      where: { reviewerId_listingId: { reviewerId: buyer.id, listingId: bicycle.id } },
+      update: {},
+      create: {
+        listingId: bicycle.id,
+        reviewerId: buyer.id,
+        revieweeId: seller.id,
+        rating: 5,
+        comment: "Exactly as described, smooth transaction and fast reply!",
+      },
+    });
+  }
+
+  if (mugs) {
+    await prisma.review.upsert({
+      where: { reviewerId_listingId: { reviewerId: buyer.id, listingId: mugs.id } },
+      update: {},
+      create: {
+        listingId: mugs.id,
+        reviewerId: buyer.id,
+        revieweeId: seller.id,
+        rating: 4,
+        comment: "Lovely mugs, shipping took a bit longer than expected.",
+      },
+    });
+  }
+
+  console.log("Seeded users:", { seller: seller.email, buyer: buyer.email });
+}
+
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
