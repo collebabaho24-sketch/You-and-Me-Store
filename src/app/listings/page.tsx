@@ -9,7 +9,7 @@ type Listing = {
   title: string;
   price: number;
   category: string;
-  imageUrl: string | null;
+  images: string[];
   seller: { name: string };
 };
 

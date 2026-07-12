@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -11,6 +11,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+
+  useEffect(() => {
+    getProviders().then((providers) => {
+      setGoogleEnabled(Boolean(providers?.google));
+    });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,6 +77,29 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Log in"}
           </button>
         </form>
+
+        <p className="mt-3 text-sm text-right">
+          <Link href="/forgot-password" className="text-brand-500 hover:underline">
+            Forgot password?
+          </Link>
+        </p>
+
+        {googleEnabled && (
+          <>
+            <div className="my-4 flex items-center gap-3 text-xs text-brand-400">
+              <div className="h-px flex-1 bg-brand-100" />
+              or
+              <div className="h-px flex-1 bg-brand-100" />
+            </div>
+            <button
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: "/listings" })}
+              className="btn-outline w-full"
+            >
+              Continue with Google
+            </button>
+          </>
+        )}
 
         <p className="mt-4 text-sm text-brand-500">
           No account yet?{" "}

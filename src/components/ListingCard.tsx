@@ -6,17 +6,19 @@ type Listing = {
   title: string;
   price: number;
   category: string;
-  imageUrl: string | null;
+  images: string[];
   seller: { name: string; rating?: { average: number; count: number } };
 };
 
 export default function ListingCard({ listing }: { listing: Listing }) {
+  const thumbnail = listing.images[0];
+
   return (
     <Link href={`/listings/${listing.id}`} className="card overflow-hidden hover:shadow-md transition-shadow">
       <div className="aspect-video bg-brand-100 flex items-center justify-center overflow-hidden">
-        {listing.imageUrl ? (
+        {thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" />
+          <img src={thumbnail} alt={listing.title} className="h-full w-full object-cover" />
         ) : (
           <span className="text-brand-300 text-sm">No image</span>
         )}

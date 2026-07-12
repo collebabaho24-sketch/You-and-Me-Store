@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { getProviders, signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -13,6 +13,13 @@ export default function RegisterPage() {
   const [role, setRole] = useState<"BUYER" | "SELLER">("BUYER");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+
+  useEffect(() => {
+    getProviders().then((providers) => {
+      setGoogleEnabled(Boolean(providers?.google));
+    });
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -121,6 +128,26 @@ export default function RegisterPage() {
             {loading ? "Creating account..." : "Sign up"}
           </button>
         </form>
+
+        {googleEnabled && (
+          <>
+            <div className="my-4 flex items-center gap-3 text-xs text-brand-400">
+              <div className="h-px flex-1 bg-brand-100" />
+              or
+              <div className="h-px flex-1 bg-brand-100" />
+            </div>
+            <button
+              type="button"
+              onClick={() => signIn("google", { callbackUrl: "/listings" })}
+              className="btn-outline w-full"
+            >
+              Continue with Google
+            </button>
+            <p className="mt-2 text-xs text-brand-400 text-center">
+              Google sign-up starts you off as a buyer.
+            </p>
+          </>
+        )}
 
         <p className="mt-4 text-sm text-brand-500">
           Already have an account?{" "}

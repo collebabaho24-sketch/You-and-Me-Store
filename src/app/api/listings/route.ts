@@ -9,13 +9,7 @@ const listingSchema = z.object({
   description: z.string().min(10).max(4000),
   price: z.number().nonnegative(),
   category: z.string().min(1),
-  imageUrl: z
-    .string()
-    .refine((val) => val === "" || val.startsWith("/uploads/") || z.string().url().safeParse(val).success, {
-      message: "Invalid image URL",
-    })
-    .optional()
-    .or(z.literal("")),
+  images: z.array(z.string().url()).max(6, "You can upload up to 6 photos.").optional(),
 });
 
 const SORT_OPTIONS = {
@@ -60,8 +54,8 @@ export async function GET(req: Request) {
       ...(q
         ? {
             OR: [
-              { title: { contains: q } },
-              { description: { contains: q } },
+              { title: { contains: q, mode: "insensitive" } },
+              { description: { contains: q, mode: "insensitive" } },
             ],
           }
         : {}),
@@ -102,6 +96,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Only sellers can create listings." }, { status: 403 });
   }
 
+  if (!session.user.emailVerified) {
+    return NextResponse.json(
+      { error: "Please verify your email before creating a listing." },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json();
   const parsed = listingSchema.safeParse(body);
 
@@ -112,7 +113,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { title, description, price, category, imageUrl } = parsed.data;
+  const { title, description, price, category, images } = parsed.data;
 
   const listing = await prisma.listing.create({
     data: {
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
       description,
       price,
       category,
-      imageUrl: imageUrl || null,
+      images: images ?? [],
       sellerId: session.user.id,
     },
   });

@@ -25,10 +25,6 @@ yarn-error.log*
 /prisma/dev.db
 /prisma/dev.db-journal
 
-# user-uploaded content
-/public/uploads/*
-!/public/uploads/.gitkeep
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts

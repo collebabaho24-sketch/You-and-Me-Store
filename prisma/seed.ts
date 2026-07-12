@@ -14,6 +14,7 @@ async function main() {
       email: "seller@example.com",
       passwordHash,
       role: "SELLER",
+      emailVerified: new Date(),
     },
   });
 
@@ -25,6 +26,7 @@ async function main() {
       email: "buyer@example.com",
       passwordHash,
       role: "BUYER",
+      emailVerified: new Date(),
     },
   });
 

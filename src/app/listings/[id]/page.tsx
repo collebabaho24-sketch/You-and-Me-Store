@@ -12,7 +12,7 @@ type Listing = {
   description: string;
   price: number;
   category: string;
-  imageUrl: string | null;
+  images: string[];
   seller: { id: string; name: string };
 };
 
@@ -39,6 +39,8 @@ export default function ListingDetailPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
+  const [activeImage, setActiveImage] = useState<string | null>(null);
+
   const [reviewsData, setReviewsData] = useState<ReviewsData | null>(null);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
@@ -59,6 +61,7 @@ export default function ListingDetailPage() {
       }
       const data: Listing = await res.json();
       setListing(data);
+      setActiveImage(data.images[0] ?? null);
       loadReviews(data.seller.id);
     });
   }, [params.id, loadReviews]);
@@ -140,13 +143,30 @@ export default function ListingDetailPage() {
       <div className="md:col-span-2 space-y-6">
         <div className="card overflow-hidden">
           <div className="aspect-video bg-brand-100 flex items-center justify-center overflow-hidden">
-            {listing.imageUrl ? (
+            {activeImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={listing.imageUrl} alt={listing.title} className="h-full w-full object-cover" />
+              <img src={activeImage} alt={listing.title} className="h-full w-full object-cover" />
             ) : (
               <span className="text-brand-300">No image</span>
             )}
           </div>
+          {listing.images.length > 1 && (
+            <div className="flex gap-2 p-3 border-b border-brand-100 overflow-x-auto">
+              {listing.images.map((url) => (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => setActiveImage(url)}
+                  className={`h-14 w-14 shrink-0 rounded-md overflow-hidden border-2 ${
+                    activeImage === url ? "border-brand-600" : "border-transparent"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={url} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="p-6">
             <span className="text-xs font-medium uppercase tracking-wide text-accent-600">
               {listing.category}
