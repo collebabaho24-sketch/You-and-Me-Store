@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import StarRating from "@/components/StarRating";
+import { conditionLabel } from "@/lib/categories";
 
 type Listing = {
   id: string;
@@ -12,6 +13,8 @@ type Listing = {
   description: string;
   price: number;
   category: string;
+  condition: string;
+  location: string | null;
   images: string[];
   seller: { id: string; name: string };
 };
@@ -168,9 +171,17 @@ export default function ListingDetailPage() {
             </div>
           )}
           <div className="p-6">
-            <span className="text-xs font-medium uppercase tracking-wide text-accent-600">
-              {listing.category}
-            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-medium uppercase tracking-wide text-accent-600">
+                {listing.category}
+              </span>
+              {listing.condition !== "NOT_APPLICABLE" && (
+                <span className="text-xs font-medium text-brand-500">· {conditionLabel(listing.condition)}</span>
+              )}
+              {listing.location && (
+                <span className="text-xs font-medium text-brand-500">· {listing.location}</span>
+              )}
+            </div>
             <h1 className="text-2xl font-bold text-brand-800 mt-1">{listing.title}</h1>
             <p className="text-2xl font-bold text-brand-600 mt-2">${listing.price.toFixed(2)}</p>
             <p className="text-brand-700 mt-4 whitespace-pre-wrap">{listing.description}</p>

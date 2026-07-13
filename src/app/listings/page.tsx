@@ -2,13 +2,15 @@
 
 import { useEffect, useState, useCallback } from "react";
 import ListingCard from "@/components/ListingCard";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, CONDITIONS } from "@/lib/categories";
 
 type Listing = {
   id: string;
   title: string;
   price: number;
   category: string;
+  condition: string;
+  location: string | null;
   images: string[];
   seller: { name: string };
 };
@@ -23,6 +25,8 @@ export default function ListingsPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
+  const [condition, setCondition] = useState("");
+  const [location, setLocation] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState("newest");
@@ -33,6 +37,8 @@ export default function ListingsPage() {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (category) params.set("category", category);
+    if (condition) params.set("condition", condition);
+    if (location) params.set("location", location);
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
     if (sort) params.set("sort", sort);
@@ -41,18 +47,20 @@ export default function ListingsPage() {
     const data = await res.json();
     setListings(data);
     setLoading(false);
-  }, [q, category, minPrice, maxPrice, sort]);
+  }, [q, category, condition, location, minPrice, maxPrice, sort]);
 
   useEffect(() => {
     const timeout = setTimeout(fetchListings, 250);
     return () => clearTimeout(timeout);
   }, [fetchListings]);
 
-  const hasFilters = q || category || minPrice || maxPrice || sort !== "newest";
+  const hasFilters = q || category || condition || location || minPrice || maxPrice || sort !== "newest";
 
   function clearFilters() {
     setQ("");
     setCategory("");
+    setCondition("");
+    setLocation("");
     setMinPrice("");
     setMaxPrice("");
     setSort("newest");
@@ -70,7 +78,7 @@ export default function ListingsPage() {
         />
       </div>
 
-      <div className="card p-4 mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-5 items-end">
+      <div className="card p-4 mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7 items-end">
         <div>
           <label htmlFor="category" className="label">Category</label>
           <select
@@ -86,6 +94,32 @@ export default function ListingsPage() {
               </option>
             ))}
           </select>
+        </div>
+        <div>
+          <label htmlFor="condition" className="label">Condition</label>
+          <select
+            id="condition"
+            className="input"
+            value={condition}
+            onChange={(e) => setCondition(e.target.value)}
+          >
+            <option value="">Any condition</option>
+            {CONDITIONS.map((c) => (
+              <option key={c.value} value={c.value}>
+                {c.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="location" className="label">Location</label>
+          <input
+            id="location"
+            className="input"
+            placeholder="e.g. UK"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+          />
         </div>
         <div>
           <label htmlFor="minPrice" className="label">Min price</label>

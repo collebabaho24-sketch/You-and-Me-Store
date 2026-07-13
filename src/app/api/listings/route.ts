@@ -3,12 +3,17 @@ import { getServerSession } from "next-auth";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { CONDITIONS } from "@/lib/categories";
+
+const CONDITION_VALUES = CONDITIONS.map((c) => c.value) as [string, ...string[]];
 
 const listingSchema = z.object({
   title: z.string().min(3).max(120),
   description: z.string().min(10).max(4000),
   price: z.number().nonnegative(),
   category: z.string().min(1),
+  condition: z.enum(CONDITION_VALUES).optional(),
+  location: z.string().max(120).optional().or(z.literal("")),
   images: z.array(z.string().url()).max(6, "You can upload up to 6 photos.").optional(),
 });
 
@@ -22,6 +27,8 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q")?.trim();
   const category = searchParams.get("category")?.trim();
+  const condition = searchParams.get("condition")?.trim();
+  const location = searchParams.get("location")?.trim();
   const minPrice = searchParams.get("minPrice");
   const maxPrice = searchParams.get("maxPrice");
   const sort = searchParams.get("sort") as keyof typeof SORT_OPTIONS | null;
@@ -50,6 +57,8 @@ export async function GET(req: Request) {
     where: {
       status: "ACTIVE",
       ...(category ? { category } : {}),
+      ...(condition ? { condition } : {}),
+      ...(location ? { location: { contains: location, mode: "insensitive" } } : {}),
       ...(Object.keys(priceFilter).length ? { price: priceFilter } : {}),
       ...(q
         ? {
@@ -113,7 +122,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { title, description, price, category, images } = parsed.data;
+  const { title, description, price, category, condition, location, images } = parsed.data;
 
   const listing = await prisma.listing.create({
     data: {
@@ -121,6 +130,8 @@ export async function POST(req: Request) {
       description,
       price,
       category,
+      condition: condition ?? "NOT_APPLICABLE",
+      location: location || null,
       images: images ?? [],
       sellerId: session.user.id,
     },

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { CATEGORIES } from "@/lib/categories";
+import { CATEGORIES, CONDITIONS } from "@/lib/categories";
 
 const MAX_PHOTOS = 6;
 
@@ -15,6 +15,8 @@ export default function NewListingPage() {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
+  const [condition, setCondition] = useState<string>("NOT_APPLICABLE");
+  const [location, setLocation] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -97,7 +99,7 @@ export default function NewListingPage() {
     const res = await fetch("/api/listings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, description, price: priceNum, category, images }),
+      body: JSON.stringify({ title, description, price: priceNum, category, condition, location, images }),
     });
     setLoading(false);
 
@@ -166,6 +168,33 @@ export default function NewListingPage() {
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="condition" className="label">Condition</label>
+              <select
+                id="condition"
+                className="input"
+                value={condition}
+                onChange={(e) => setCondition(e.target.value)}
+              >
+                {CONDITIONS.map((c) => (
+                  <option key={c.value} value={c.value}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="location" className="label">Location (optional)</label>
+              <input
+                id="location"
+                className="input"
+                placeholder="e.g. UK, London"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
             </div>
           </div>
           <div>

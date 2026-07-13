@@ -48,6 +48,10 @@ model Listing {
   description String
   price       Float
   category    String
+  // "NEW" | "USED" | "NOT_APPLICABLE" (e.g. for hired services)
+  condition   String   @default("NOT_APPLICABLE")
+  // Free-text seller-entered location, e.g. "UK", "London, UK".
+  location    String?
   images      String[] @default([])
   status      String   @default("ACTIVE")
   createdAt   DateTime @default(now())
@@ -60,6 +64,7 @@ model Listing {
 
   @@index([category])
   @@index([sellerId])
+  @@index([condition])
 }
 
 model Message {
